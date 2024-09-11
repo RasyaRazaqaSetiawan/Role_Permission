@@ -13,7 +13,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <x-message></x-message>
 
-            <table class="w-full">
+            <table id="permissionsTable" class="w-full">
                 <thead class="bg-gray-50">
                     <tr class="border-b">
                         <th class="px-6 py-3 text-left" width="60">#</th>
@@ -25,8 +25,8 @@
                 <tbody class="bg-white">
                     @if ($permissions->isNotEmpty())
                         @foreach ($permissions as $data)
-                            <tr class="border-b">
-                                <td class="px-6 py-3 text-left">{{ $data->id }}</td>
+                            <tr class="border-b" id="permissionRow{{  $loop->index + 1 }}">
+                                <td class="px-6 py-3 text-left">{{  $loop->index + 1 }}</td>
                                 <td class="px-6 py-3 text-left">{{ $data->name }}</td>
                                 <td class="px-6 py-3 text-left">
                                     {{ \Carbon\Carbon::parse($data->created_at)->format('d M, Y') }}
@@ -35,7 +35,7 @@
                                     <a href="{{ route('permissions.edit', $data->id) }}"
                                         class="bg-slate-700 text-sm rounded-md text-white px-3 py-2 hover:bg-slate-600">Edit</a>
 
-                                    <form action="{{ route('permissions.destroy', $data->id) }}" method="POST"
+                                    <form class="delete-form" action="{{ route('permissions.destroy', $data->id) }}" method="POST"
                                         style="display:inline-block">
                                         @csrf
                                         @method('DELETE')
@@ -44,7 +44,6 @@
                                             onclick="return confirm('Are you sure you want to delete this permission?')">Delete</button>
                                     </form>
                                 </td>
-
                             </tr>
                         @endforeach
                     @endif
@@ -55,4 +54,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#permissionsTable').on('submit', '.delete-form', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            form.closest('tr').remove(); // Remove row from table
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </x-app-layout>
