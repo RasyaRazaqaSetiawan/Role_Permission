@@ -17,13 +17,31 @@
                         <div>
                             <label for="roleName" class="text-lg font-medium">Name</label>
                             <div class="my-3">
-                                <input id="roleName" name="name" type="text" placeholder="Enter Name"
-                                    class="border-gray-300 shadow-sm w-1/2 rounded-lg">
+                                <select id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg">
+                                    <option value="">Select User</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->name }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
                                 <p id="nameError" class="text-red-400 font-medium"></p>
                             </div>
 
-                            <div id="permissionsList" class="grid grid-cols-4 gap-4 mb-3">
-                                <!-- Permissions list will be loaded here -->
+                            <div id="permissionsList" class="mb-3">
+                                <label class="font-medium text-base">Select Permissions *</label>
+                                @foreach ($permissions as $permission)
+                                    <div class="mt-3">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox">
+                                            <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
+                                        </div>
+                                        @foreach ($hakAkses as $hak)
+                                            <div class="ml-6 mt-2 flex items-center">
+                                                <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}">
+                                                <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2 mr-1">{{ $hak->name }}</label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endforeach
                             </div>
 
                             <button type="submit" class="bg-slate-700 text-sm rounded-md text-white px-5 py-3">
@@ -41,32 +59,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Load permissions via AJAX
-            function loadPermissions() {
-                $.ajax({
-                    url: "{{ route('permissions.index') }}",
-                    method: "GET",
-                    success: function(data) {
-                        let permissionsHtml = '';
-                        $.each(data, function(index, permission) {
-                            permissionsHtml += `
-                                <div class="mt-3 flex items-center">
-                                    <input type="checkbox" id="permission${permission.id}" name="permissions[]" value="${permission.id}" class="rounded">
-                                    <label for="permission${permission.id}" class="ml-2">${permission.name}</label>
-                                </div>
-                            `;
-                        });
-                        $('#permissionsList').html(permissionsHtml);
-                    },
-                    error: function(xhr) {
-                        console.log('Failed to load permissions:', xhr);
-                    }
-                });
-            }
-
-            // Load permissions when page loads
-            loadPermissions();
-
             // Handle form submission via AJAX
             $('#roleCreateForm').on('submit', function(e) {
                 e.preventDefault();
@@ -94,6 +86,18 @@
                         $('#formMessage').html(errorHtml).addClass('text-red-500');
                     }
                 });
+            });
+
+            // Handle the select all hakAkses checkboxes functionality
+            $('#permissionsList').on('change', '.permission-checkbox', function() {
+                var permissionId = $(this).attr('id').split('permission')[1];
+                if ($(this).is(':checked')) {
+                    // Check all hakAkses checkboxes for this permission
+                    $(`.permission-${permissionId}`).prop('checked', true);
+                } else {
+                    // Uncheck all hakAkses checkboxes for this permission
+                    $(`.permission-${permissionId}`).prop('checked', false);
+                }
             });
         });
     </script>

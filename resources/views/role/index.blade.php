@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Roles
+                Role
             </h2>
             <a href="{{ route('role.create') }}" class="bg-slate-700 text-sm rounded-md text-white px-3 py-2">Create</a>
         </div>
@@ -23,10 +23,10 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white">
-                        @if ($role->isNotEmpty())
-                            @foreach ($role as $data)
+                        @if ($roles->isNotEmpty())
+                            @foreach ($roles as $data)
                                 <tr class="border-b border-gray-200">
-                                    <td class="px-6 py-3 text-left">{{ $data->id }}</td>
+                                    <td class="px-6 py-3 text-left">{{  $loop->index + 1 }}</td>
                                     <td class="px-6 py-3 text-left">{{ $data->name }}</td>
                                     <td class="px-6 py-3 text-left">
                                         {{ $data->permissions->pluck('name')->implode(',') }}</td>
@@ -34,8 +34,7 @@
                                         <a href="{{ route('role.edit', $data->id) }}"
                                             class="bg-slate-700 text-sm rounded-md text-white px-3 py-2 hover:bg-slate-600 transition">Edit</a>
 
-                                        <form action="{{ route('role.destroy', $data->id) }}" method="POST"
-                                            style="display:inline-block">
+                                        <form action="{{ route('role.destroy', $data->id) }}" method="POST" style="display:inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -55,7 +54,7 @@
             </div>
 
             <div class="my-3">
-                {{ $role->links('pagination::tailwind') }}
+                {{ $roles->links('pagination::tailwind') }}
             </div>
         </div>
     </div>

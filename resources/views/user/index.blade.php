@@ -4,8 +4,8 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 User
             </h2>
-            <a href="{{ route('user.create') }}"
-                class="bg-slate-700 text-sm rounded-md text-white px-3 py-3">Create</a>
+            {{-- <a href="{{ route('user.create') }}"
+                class="bg-slate-700 text-sm rounded-md text-white px-3 py-3">Create</a> --}}
         </div>
     </x-slot>
 
@@ -28,7 +28,7 @@
                         @if ($user->isNotEmpty())
                             @foreach ($user as $data)
                                 <tr class="border-b border-gray-200">
-                                    <td class="px-6 py-3 text-left">{{ $data->id }}</td>
+                                    <td class="px-6 py-3 text-left">{{  $loop->index + 1 }}</td>
                                     <td class="px-6 py-3 text-left">{{ $data->name }}</td>
                                     <td class="px-6 py-3 text-left">{{ $data->email }}</td>
                                     <td class="px-6 py-3 text-left">

@@ -36,18 +36,19 @@ class RolePermissionSeeder extends Seeder
         // Data permission
         $permissionData = [
             [
-                'name' => 'Dashboard',
-                'description' => 'dashboard',
+                'name' => 'Permissions',
+                'description' => 'permissions',
                 'guard_name' => 'web',
             ],
             [
-                'name' => 'Settings',
-                'description' => 'settings',
+                'name' => 'Role',
+                'description' => 'Role',
                 'guard_name' => 'web',
             ],
+
             [
-                'name' => 'User Management',
-                'description' => 'User Management',
+                'name' => 'User',
+                'description' => 'User',
                 'guard_name' => 'web',
             ],
         ];
