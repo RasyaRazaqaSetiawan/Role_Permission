@@ -15,9 +15,7 @@ class UserController extends Controller
     public function index()
     {
         $user = User::orderBy('created_at', 'DESC')->paginate(10);
-        return view('user.index', [
-            'user' => $user
-        ]);
+        return view('user.index', ['user' => $user]);
     }
 
     // Menampilkan halaman form create pengguna
@@ -32,9 +30,9 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:user',
+            'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'roles' => 'required|array' // Roles yang akan diberikan ke pengguna
+            'roles' => 'required|array'
         ]);
 
         if ($validator->passes()) {
@@ -57,7 +55,7 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        $roles = Role::all(); // Ambil semua role
+        $roles = Role::all();
         return view('user.edit', [
             'user' => $user,
             'roles' => $roles
@@ -71,9 +69,9 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:user,email,' . $id . ',id',
+            'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|min:6|confirmed',
-            'roles' => 'required|array' // Roles yang diperbarui
+            'roles' => 'required|array'
         ]);
 
         if ($validator->passes()) {

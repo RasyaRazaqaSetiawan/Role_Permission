@@ -18,7 +18,7 @@
                         @method('PUT')
                         <div>
                             <label for="name" class="text-lb font-medium">Name</label>
-                            <div class="my-3">
+                            <div class="my-3">  
                                 <input id="name" name="name" value="{{ old('name', $permission->name) }}" placeholder="Enter Name" type="text" class="border-gray-300 shadow-sm w-1/2 rounded-lg">
                                 @error('name')
                                     <p class="text-red-400 font-medium">{{ $message }}</p>
