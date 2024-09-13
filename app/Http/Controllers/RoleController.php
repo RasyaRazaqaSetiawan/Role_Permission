@@ -2,163 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
-    // Menampilkan halaman daftar role
+    // List all roles (Read)
     public function index()
     {
-        $roles = Role::orderBy('created_at', 'DESC')->paginate(10);
-        return view('role.index', [
-            'roles' => $roles
-        ]);
+        $roles = Role::with('permissions')->paginate(10);
+        return view('role.index', compact('roles'));
     }
 
-    // Menampilkan halaman form create role
+    // Show form to create a new role (Create - Step 1)
     public function create()
     {
-        $permissions = Permission::orderBy('name', 'ASC')->get();
-        $users = User::all();
-        $hakAkses = DB::table('hakakses')->get();
-        // dd($hak);
-        return view('role.create', [
-            'permissions' => $permissions,
-            'hakAkses' => $hakAkses,
-            'users' => $users
-        ]);
+        $permissions = Permission::all();
+        return view('role.create', compact('permissions'));
     }
 
-    // Menyimpan role baru ke database menggunakan AJAX dan ACID
+    // Store a new role in the database (Create - Step 2)
     public function store(Request $request)
     {
-        // Validasi input menggunakan Validator
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:roles|min:3',
+        $request->validate([
+            'name' => 'required|unique:roles,name',
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,id'
         ]);
 
-        if ($validator->fails()) {
-            // Kembalikan respon JSON dengan error 422 jika validasi gagal
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        DB::transaction(function () use ($request) {
+            $role = Role::create(['name' => $request->name]);
+            $role->syncPermissions($request->permissions);
+        });
 
-        try {
-            // Mulai transaksi (ACID - Atomicity & Consistency)
-            DB::beginTransaction();
-
-            // Buat role baru
-            $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
-
-            // Assign permissions ke role
-            $permissions = Permission::whereIn('id', $request->permissions)->get();
-            foreach ($permissions as $permission) {
-                $role->givePermissionTo($permission);
-            }
-
-            // Commit transaksi (ACID - Durability)
-            DB::commit();
-
-            return redirect()->route('role.index')->with('success', 'Role created successfully!');
-        } catch (\Exception $e) {
-            // Rollback jika terjadi kesalahan (ACID - Isolation)
-            DB::rollBack();
-            return redirect()->route('role.index')->with('error', 'Something went wrong!');
-        }
+        return response()->json(['message' => 'Role created successfully']);
     }
 
+    // Show form to edit a role (Update - Step 1)
     public function edit($id)
     {
-        $role = Role::findOrFail($id);
-        $permissions = Permission::orderBy('name', 'ASC')->get();
-        $hakAkses = DB::table('hakakses')->get();
-        $users = User::all();
-
-        return view('role.edit', [
-            'role' => $role,
-            'permissions' => $permissions,
-            'hakAkses' => $hakAkses,
-            'users' => $users,
-        ]);
+        $role = Role::findById($id);
+        $permissions = Permission::all();
+        return response()->json(['role' => $role, 'permissions' => $role->permissions, 'all_permissions' => $permissions]);
     }
 
+    // Update the role in the database (Update - Step 2)
     public function update(Request $request, $id)
     {
-        // Validasi input menggunakan Validator
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|min:3',
+        $request->validate([
+            'name' => 'required|unique:roles,name,' . $id,
             'permissions' => 'required|array',
-            'permissions.*' => 'exists:permissions,id',
-            'hakakses' => 'nullable|array',
-            'hakakses.*.*' => 'exists:hakakses,id'
         ]);
 
-        if ($validator->fails()) {
-            // Kembalikan respon JSON dengan error 422 jika validasi gagal
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        DB::transaction(function () use ($request, $id) {
+            $role = Role::findById($id);
+            $role->update(['name' => $request->name]);
+            $role->syncPermissions($request->permissions);
+        });
 
-        try {
-            // Mulai transaksi (ACID - Atomicity & Consistency)
-            DB::beginTransaction();
-
-            // Temukan role yang akan diupdate
-            $role = Role::findOrFail($id);
-            $role->name = $request->name;
-            $role->save();
-
-            // Hapus semua permissions yang ada
-            $role->permissions()->detach();
-
-            // Assign permissions baru ke role
-            $permissions = Permission::whereIn('id', $request->permissions)->get();
-            foreach ($permissions as $permission) {
-                $role->givePermissionTo($permission);
-            }
-
-            // Commit transaksi (ACID - Durability)
-            DB::commit();
-
-            return redirect()->route('role.index')->with('success', 'Role updated successfully!');
-        } catch (\Exception $e) {
-            // Rollback jika terjadi kesalahan (ACID - Isolation)
-            DB::rollBack();
-            return redirect()->route('role.index')->with('error', 'Something went wrong!');
-        }
+        return response()->json(['message' => 'Role updated successfully']);
     }
+
+    // Delete a role (Delete)
     public function destroy($id)
     {
-        // Validasi ID role
-        $role = Role::findOrFail($id);
-    
-        try {
-            // Mulai transaksi (ACID - Atomicity & Consistency)
-            DB::beginTransaction();
-    
-            // Hapus semua permissions yang terasosiasi dengan role
-            $role->permissions()->detach();
-    
-            // Hapus role dari database
+        DB::transaction(function () use ($id) {
+            $role = Role::findById($id);
             $role->delete();
-    
-            // Commit transaksi (ACID - Durability)
-            DB::commit();
-    
-            // Redirect kembali ke halaman index dengan pesan sukses
-            return redirect()->route('role.index')->with('success', 'Role deleted successfully!');
-        } catch (\Exception $e) {
-            // Rollback jika terjadi kesalahan (ACID - Isolation)
-            DB::rollBack();
-    
-            // Redirect kembali ke halaman index dengan pesan error
-            return redirect()->route('role.index')->with('error', 'Something went wrong!');
-        }
+        });
+
+        return response()->json(['message' => 'Role deleted successfully']);
     }
-    
 }

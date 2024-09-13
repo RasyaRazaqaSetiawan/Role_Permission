@@ -16,7 +16,6 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         // BUAT ROLE
-        $superadmin = Role::create(['name' => 'Super Admin']);
         $admin = Role::create(['name' => 'Admin']);
         $user = Role::create(['name' => 'User']);
 
@@ -64,23 +63,23 @@ class RolePermissionSeeder extends Seeder
 
         // Berikan semua permission kepada role 'Super Admin' dan simpan di tabel 'hakakses_permission'
         foreach ($permissions as $permission) {
-            $superadmin->givePermissionTo($permission->name);
+            $admin->givePermissionTo($permission->name);
 
             foreach ($hakaksesIds as $hakaksesId) {
                 DB::table('hakakses_permission')->insert([
                     'permission_id' => $permission->id,
                     'hakakses_id' => $hakaksesId,
-                    'role_id' => $superadmin->id,
+                    'role_id' => $admin->id,
                 ]);
             }
         }
 
         // Sync role untuk user Super Admin dan Admin berdasarkan email
-        $superadminUser = User::firstWhere('email', 'superadmin@gmail.com');
+        $adminUser = User::firstWhere('email', 'admin@gmail.com');
         $adminUser = User::firstWhere('email', 'admin@gmail.com');
 
-        if ($superadminUser) {
-            $superadminUser->syncRoles([$superadmin->id]);
+        if ($adminUser) {
+            $adminUser->syncRoles([$admin->id]);
         }
 
         if ($adminUser) {

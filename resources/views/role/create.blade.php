@@ -12,8 +12,10 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
+                    <!-- Form for creating role -->
                     <form id="roleCreateForm" method="POST">
                         @csrf
+                        <!-- Role Name Selection -->
                         <div>
                             <label for="roleName" class="text-lg font-medium">Name</label>
                             <div class="my-3">
@@ -26,6 +28,7 @@
                                 <p id="nameError" class="text-red-400 font-medium"></p>
                             </div>
 
+                            <!-- Permissions and Hak Akses -->
                             <div id="permissionsList" class="mb-3">
                                 <label class="font-medium text-base">Select Permissions *</label>
                                 @foreach ($permissions as $permission)
@@ -34,6 +37,7 @@
                                             <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox">
                                             <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
                                         </div>
+                                        <!-- Hak Akses for each Permission -->
                                         @foreach ($hakAkses as $hak)
                                             <div class="ml-6 mt-2 flex items-center">
                                                 <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}">
@@ -44,6 +48,7 @@
                                 @endforeach
                             </div>
 
+                            <!-- Submit Button -->
                             <button type="submit" class="bg-slate-700 text-sm rounded-md text-white px-5 py-3">
                                 Submit
                             </button>
