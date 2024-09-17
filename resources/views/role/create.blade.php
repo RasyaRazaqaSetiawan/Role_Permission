@@ -67,6 +67,12 @@
             $('#roleCreateForm').on('submit', function(e) {
                 e.preventDefault();
 
+                // Check if at least one permission is selected
+                if ($('input[name="permissions[]"]:checked').length === 0) {
+                    $('#formMessage').text('Please select at least one permission.').addClass('text-red-500');
+                    return;
+                }
+
                 var formData = $(this).serialize();
 
                 $.ajax({

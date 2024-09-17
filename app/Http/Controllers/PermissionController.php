@@ -39,7 +39,7 @@ class PermissionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         // ATOMICITY: Mulai transaksi
@@ -54,13 +54,14 @@ class PermissionController extends Controller
 
             // Commit transaction (Durability)
             DB::commit();
-            return redirect()->route('permissions.index')->with('success', 'Permission created successfully!');
+            return response()->json(['success' => 'Permission created successfully!'], 200);
         } catch (Exception $e) {
             // Rollback jika terjadi error (Consistency)
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to create permission: ' . $e->getMessage()]);
+            return response()->json(['error' => 'Failed to create permission: ' . $e->getMessage()], 500);
         }
     }
+
 
     // EDIT (View edit form)
     public function edit($id)
