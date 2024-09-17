@@ -15,37 +15,36 @@
                     <!-- Form for creating role -->
                     <form id="roleCreateForm" method="POST">
                         @csrf
-                        <!-- Role Name Selection -->
+                        <!-- Role Name Input -->
                         <div>
                             <label for="roleName" class="text-lg font-medium">Name</label>
                             <div class="my-3">
-                                <select id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg">
-                                    <option value="">Select User</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->name }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Role Name">
                                 <p id="nameError" class="text-red-400 font-medium"></p>
                             </div>
 
-                            <!-- Permissions and Hak Akses -->
                             <div id="permissionsList" class="mb-3">
-                                <label class="font-medium text-base">Select Permissions *</label>
-                                @foreach ($permissions as $permission)
-                                    <div class="mt-3">
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox">
-                                            <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
-                                        </div>
-                                        <!-- Hak Akses for each Permission -->
-                                        @foreach ($hakAkses as $hak)
-                                            <div class="ml-6 mt-2 flex items-center">
-                                                <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}">
-                                                <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2 mr-1">{{ $hak->name }}</label>
+                                <label class="font-medium text-base">Select Permissions</label>
+                                <div class="flex flex-wrap gap-4">
+                                    @foreach ($permissions as $permission)
+                                        <div class="flex flex-col items-start p-3 border rounded-lg">
+                                            <!-- Permission Checkbox -->
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox">
+                                                <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
                                             </div>
-                                        @endforeach
-                                    </div>
-                                @endforeach
+                                            <!-- Hak Akses Checkbox -->
+                                            <div class="mt-3 flex flex-wrap gap-2">
+                                                @foreach ($hakAkses as $hak)
+                                                    <div class="flex items-center">
+                                                        <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}">
+                                                        <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2">{{ $hak->name }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
 
                             <!-- Submit Button -->
@@ -75,7 +74,7 @@
                     method: "POST",
                     data: formData,
                     success: function(response) {
-                        $('#formMessage').text('Role created successfully!').addClass('text-green-500');
+                        $('#formMessage').text(response.message).addClass('text-green-500');
                         $('#nameError').text(''); // Clear previous errors
                         $('#roleCreateForm')[0].reset(); // Reset the form
                     },

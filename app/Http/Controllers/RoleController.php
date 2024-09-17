@@ -19,8 +19,9 @@ class RoleController extends Controller
     // Show form to create a new role (Create - Step 1)
     public function create()
     {
-        $permissions = Permission::all();
-        return view('role.create', compact('permissions'));
+        $permissions = Permission::all(); // Menggunakan model Eloquent Spatie
+        $hakAkses = DB::table('hakakses')->get(); // Menggunakan Query Builder
+        return view('role.create', compact('permissions', 'hakAkses'));
     }
 
     // Store a new role in the database (Create - Step 2)
@@ -32,7 +33,11 @@ class RoleController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            $role = Role::create(['name' => $request->name]);
+            $role = Role::create([
+                'name' => $request->name
+            ]);
+
+            // Attach permissions to the role
             $role->syncPermissions($request->permissions);
         });
 
@@ -42,9 +47,15 @@ class RoleController extends Controller
     // Show form to edit a role (Update - Step 1)
     public function edit($id)
     {
-        $role = Role::findById($id);
-        $permissions = Permission::all();
-        return response()->json(['role' => $role, 'permissions' => $role->permissions, 'all_permissions' => $permissions]);
+        $role = Role::findOrFail($id); // Menggunakan model Eloquent Spatie
+        $permissions = Permission::all(); // Menggunakan model Eloquent Spatie
+        $rolePermissions = $role->permissions->pluck('id')->toArray();
+
+        return response()->json([
+            'role' => $role,
+            'permissions' => $rolePermissions,
+            'all_permissions' => $permissions
+        ]);
     }
 
     // Update the role in the database (Update - Step 2)
@@ -56,8 +67,10 @@ class RoleController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $id) {
-            $role = Role::findById($id);
+            $role = Role::findOrFail($id);
             $role->update(['name' => $request->name]);
+
+            // Update permissions
             $role->syncPermissions($request->permissions);
         });
 
@@ -68,7 +81,8 @@ class RoleController extends Controller
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
-            $role = Role::findById($id);
+            $role = Role::findOrFail($id);
+            $role->permissions()->detach();
             $role->delete();
         });
 

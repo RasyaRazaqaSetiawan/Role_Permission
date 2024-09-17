@@ -138,6 +138,18 @@ class CreatePermissionTables extends Migration
                 ->onDelete('cascade');
         });
 
+            // Create custom table role_has_user
+        Schema::create('role_user', function (Blueprint $table) use ($pivotRole) {
+            $table->unsignedBigInteger($pivotRole);
+            $table->foreignIdFor(User::class);
+            $table->string('user_type')->default('App\Models\User');
+
+            $table->foreign($pivotRole)
+                ->references('id')
+                ->on('roles')
+                ->onDelete('cascade');
+        });
+
         // Create hakakses_permission table
         Schema::create('hakakses_permission', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -163,6 +175,7 @@ class CreatePermissionTables extends Migration
     {
         Schema::dropIfExists('hakakses_permission');
         Schema::dropIfExists('role_has_user');
+        
 
         $tableNames = config('permission.table_names');
         Schema::dropIfExists($tableNames['role_has_permissions']);
@@ -171,5 +184,6 @@ class CreatePermissionTables extends Migration
         Schema::dropIfExists($tableNames['roles']);
         Schema::dropIfExists($tableNames['permissions']);
         Schema::dropIfExists('hakakses');
+        Schema::dropIfExists('role_user');
     }
 };

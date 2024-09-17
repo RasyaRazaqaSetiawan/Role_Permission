@@ -61,7 +61,7 @@ class RolePermissionSeeder extends Seeder
         // Ambil semua id dari tabel 'hakakses'
         $hakaksesIds = DB::table('hakakses')->pluck('id');
 
-        // Berikan semua permission kepada role 'Super Admin' dan simpan di tabel 'hakakses_permission'
+        // Berikan semua permission kepada role 'Admin' dan simpan di tabel 'hakakses_permission'
         foreach ($permissions as $permission) {
             $admin->givePermissionTo($permission->name);
 

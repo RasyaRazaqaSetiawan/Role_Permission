@@ -3,26 +3,27 @@
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'role:Admin']], function () {
-    Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
-        Route::resource('user', UserController::class);
-    });
-    Route::group(['prefix' => 'permissions'], function () {
-        Route::resource('permissions', PermissionController::class);
-    });
-    Route::group(['prefix' => 'role'], function () {
-        Route::resource('role', RoleController::class);
-    });
-    Route::group(['prefix' => 'role_permissions'], function () {
-        Route::resource('role_permissions', RolePermissionController::class);
-    });
-});
+// Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'role:Admin']], function () {
+//     Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
+//         Route::resource('user', UserController::class);
+//     });
+//     Route::group(['prefix' => 'permissions'], function () {
+//         Route::resource('permissions', PermissionController::class);
+//     });
+//     Route::group(['prefix' => 'role'], function () {
+//         Route::resource('role', RoleController::class);
+//     });
+// });
 
+Route::group(['middleware' => ['auth']], function() {
+    Route::resource('roles', RoleController::class);
+    Route::resource('users', UserController::class);
+    Route::resource('permissions', PermissionController::class);
+});
 
 Route::get('/', function () {
     return view('welcome');

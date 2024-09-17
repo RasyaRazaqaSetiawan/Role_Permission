@@ -12,44 +12,48 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
+                    <!-- Form for editing role -->
                     <form id="roleEditForm" method="POST">
                         @csrf
-                        @method('PUT')
-                        <input type="hidden" name="role_id" value="{{ $role->id }}">
+                        @method('PUT') <!-- Use PUT method for updating -->
+
+                        <!-- Role Name Input -->
                         <div>
                             <label for="roleName" class="text-lg font-medium">Name</label>
                             <div class="my-3">
-                                <select id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg">
-                                    <option value="">Select User</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->name }}" {{ $user->name == $role->name ? 'selected' : '' }}>{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="text" id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Role Name" value="{{ $role->name }}">
                                 <p id="nameError" class="text-red-400 font-medium"></p>
                             </div>
 
                             <div id="permissionsList" class="mb-3">
                                 <label class="font-medium text-base">Select Permissions</label>
-                                @foreach ($permissions as $permission)
-                                    <div class="mt-3">
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox"
-                                            {{ $role->hasPermissionTo($permission) ? 'checked' : '' }}>
-                                            <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
-                                        </div>
-                                        @foreach ($hakAkses as $hak)
-                                            <div class="ml-6 mt-2 flex items-center">
-                                                <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}"
-                                                {{ in_array($hak->id, $role->permissions->where('id', $permission->id)->pluck('id')->toArray()) ? 'checked' : '' }}>
-                                                <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2">{{ $hak->name }}</label>
+                                <div class="flex flex-wrap gap-4">
+                                    @foreach ($permissions as $permission)
+                                        <div class="flex flex-col items-start p-3 border rounded-lg">
+                                            <!-- Permission Checkbox -->
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox"
+                                                    {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}>
+                                                <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
                                             </div>
-                                        @endforeach
-                                    </div>
-                                @endforeach
+                                            <!-- Hak Akses Checkbox -->
+                                            <div class="mt-3 flex flex-wrap gap-2">
+                                                @foreach ($hakAkses as $hak)
+                                                    <div class="flex items-center">
+                                                        <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}"
+                                                            {{ isset($roleHakAkses[$permission->id]) && in_array($hak->id, $roleHakAkses[$permission->id]) ? 'checked' : '' }}>
+                                                        <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2">{{ $hak->name }}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
 
+                            <!-- Submit Button -->
                             <button type="submit" class="bg-slate-700 text-sm rounded-md text-white px-5 py-3">
-                                Submit
+                                Update
                             </button>
                             <p id="formMessage" class="mt-3 font-medium"></p>
                         </div>
@@ -70,13 +74,12 @@
                 var formData = $(this).serialize();
 
                 $.ajax({
-                    url: "{{ route('role.update', $role->id) }}",
-                    method: "POST",
+                    url: "{{ route('role.update', $role->id) }}", // Update URL for editing
+                    method: "PUT", // Use PUT method
                     data: formData,
                     success: function(response) {
-                        $('#formMessage').text('Role updated successfully!').addClass('text-green-500');
+                        $('#formMessage').text(response.message).addClass('text-green-500');
                         $('#nameError').text(''); // Clear previous errors
-                        $('#roleEditForm')[0].reset(); // Reset the form
                     },
                     error: function(xhr) {
                         let errors = xhr.responseJSON.errors;
