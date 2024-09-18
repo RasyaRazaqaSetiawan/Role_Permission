@@ -50,8 +50,8 @@
                                     </td>
                                     <td class="px-6 py-3 text-center space-x-2">
                                         <a href="{{ route('user.edit', $user->id) }}"
-                                           class="bg-slate-700 text-sm rounded-md text-white px-3 py-2 hover:bg-slate-600 transition">
-                                           Edit
+                                            class="bg-slate-700 text-sm rounded-md text-white px-3 py-2 hover:bg-slate-600 transition">
+                                            Edit
                                         </a>
 
                                         <form action="{{ route('user.destroy', $user->id) }}" method="POST" style="display:inline-block">
