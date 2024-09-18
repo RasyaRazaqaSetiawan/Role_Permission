@@ -13,13 +13,13 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <!-- Form for editing role -->
-                    <form id="roleEditForm">
+                    <form id="roleEditForm" action="{{ route('role.update', $role->id) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <!-- Role Name Input -->
                         <div class="my-3">
                             <label for="roleName" class="text-lg font-medium">Name</label>
-                            <input type="text" id="roleName" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Role Name">
+                            <input type="text" id="roleName" name="name" value="{{ old('name', $role->name) }}" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Role Name">
                             <p id="nameError" class="text-red-400 font-medium"></p>
                         </div>
 
@@ -30,14 +30,14 @@
                                     <div class="flex flex-col items-start p-3 border rounded-lg">
                                         <!-- Permission Checkbox -->
                                         <div class="flex items-center">
-                                            <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox">
+                                            <input type="checkbox" id="permission{{ $permission->id }}" name="permissions[]" value="{{ $permission->id }}" class="rounded permission-checkbox" {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}>
                                             <label for="permission{{ $permission->id }}" class="ml-2">{{ $permission->name }}</label>
                                         </div>
                                         <!-- Hak Akses Checkbox -->
                                         <div class="mt-3 flex flex-wrap gap-2">
                                             @foreach ($hakAkses as $hak)
                                                 <div class="flex items-center">
-                                                    <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}">
+                                                    <input type="checkbox" id="hakAkses{{ $permission->id }}_{{ $hak->id }}" name="hakakses[{{ $permission->id }}][]" value="{{ $hak->id }}" class="rounded hakAksesCheckbox permission-{{ $permission->id }}" {{ old('hakakses.' . $permission->id . '[]', in_array($hak->id, $role->permissions->find($permission->id)->pivot->hakakses ?? [])) ? 'checked' : '' }}>
                                                     <label for="hakAkses{{ $permission->id }}_{{ $hak->id }}" class="ml-2">{{ $hak->name }}</label>
                                                 </div>
                                             @endforeach
@@ -62,22 +62,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Populate the form with the role's current data
-            var roleId = '{{ $role->id }}';
-            $.get("{{ route('role.edit', '') }}/" + roleId, function(data) {
-                $('#roleName').val(data.role.name);
-
-                data.permissions.forEach(function(permissionId) {
-                    $('#permission' + permissionId).prop('checked', true);
-                });
-
-                data.all_permissions.forEach(function(permission) {
-                    permission.hakakses.forEach(function(hakId) {
-                        $('#hakAkses' + permission.id + '_' + hakId).prop('checked', true);
-                    });
-                });
-            });
-
             // Handle form submission via AJAX
             $('#roleEditForm').on('submit', function(e) {
                 e.preventDefault();
@@ -91,8 +75,8 @@
                 var formData = $(this).serialize();
 
                 $.ajax({
-                    url: "{{ route('role.update', '') }}/" + roleId,
-                    method: "PUT",
+                    url: $(this).attr('action'),
+                    method: "POST",
                     data: formData,
                     success: function(response) {
                         $('#formMessage').text(response.message).removeClass('text-red-500').addClass('text-green-500');

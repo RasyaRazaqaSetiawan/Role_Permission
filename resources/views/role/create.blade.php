@@ -13,7 +13,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <!-- Form for creating role -->
-                    <form id="roleCreateForm" method="POST">
+                    <form id="roleCreateForm" method="POST" action="{{ route('role.store') }}">
                         @csrf
                         <!-- Role Name Input -->
                         <div>

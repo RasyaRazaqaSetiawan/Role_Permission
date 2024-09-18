@@ -18,28 +18,32 @@
                         <!-- Name Input -->
                         <div class="my-3">
                             <label for="name" class="text-lg font-medium">Name</label>
-                            <input type="text" id="name" name="name" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="User Name">
+                            <input type="text" id="name" name="name"
+                                class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="User Name">
                             <p id="nameError" class="text-red-400 font-medium"></p>
                         </div>
 
                         <!-- Email Input -->
                         <div class="my-3">
                             <label for="email" class="text-lg font-medium">Email</label>
-                            <input type="email" id="email" name="email" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="User Email">
+                            <input type="email" id="email" name="email"
+                                class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="User Email">
                             <p id="emailError" class="text-red-400 font-medium"></p>
                         </div>
 
                         <!-- Password Input -->
                         <div class="my-3">
                             <label for="password" class="text-lg font-medium">Password</label>
-                            <input type="password" id="password" name="password" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Password">
+                            <input type="password" id="password" name="password"
+                                class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Password">
                             <p id="passwordError" class="text-red-400 font-medium"></p>
                         </div>
 
                         <!-- Confirm Password Input -->
                         <div class="my-3">
                             <label for="password_confirmation" class="text-lg font-medium">Confirm Password</label>
-                            <input type="password" id="password_confirmation" name="password_confirmation" class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Confirm Password">
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                class="border-gray-300 shadow-sm w-1/2 rounded-lg" placeholder="Confirm Password">
                         </div>
 
                         <!-- Role Dropdown -->
@@ -55,7 +59,8 @@
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="bg-slate-700 text-sm rounded-md text-white px-5 py-3">Submit</button>
+                        <button type="submit"
+                            class="bg-slate-700 text-sm rounded-md text-white px-5 py-3">Submit</button>
                         <p id="formMessage" class="mt-3 font-medium"></p>
                     </form>
                 </div>
@@ -64,10 +69,8 @@
     </div>
 
     <!-- Include jQuery and AJAX logic -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Handle form submission via AJAX
             $('#userCreateForm').on('submit', function(e) {
                 e.preventDefault();
 
@@ -78,13 +81,18 @@
                     method: "POST",
                     data: formData,
                     success: function(response) {
-                        $('#formMessage').text(response.message).removeClass('text-red-500').addClass('text-green-500');
-                        $('#nameError, #emailError, #passwordError, #roleError').text(''); // Clear previous errors
+                        $('#formMessage').text(response.message).removeClass('text-red-500')
+                            .addClass('text-green-500');
+                        $('#nameError, #emailError, #passwordError, #roleError').text(
+                        ''); // Clear previous errors
                         $('#userCreateForm')[0].reset(); // Reset the form
+                        window.location.href =
+                        "{{ route('user.index') }}"; // Redirect to index page
                     },
                     error: function(xhr) {
                         let errors = xhr.responseJSON.errors;
-                        $('#nameError, #emailError, #passwordError, #roleError').text(''); // Clear previous errors
+                        $('#nameError, #emailError, #passwordError, #roleError').text(
+                        ''); // Clear previous errors
 
                         if (errors.name) {
                             $('#nameError').text(errors.name[0]);
@@ -98,7 +106,8 @@
                         if (errors.role) {
                             $('#roleError').text(errors.role[0]);
                         }
-                        $('#formMessage').text('Please fix the errors').removeClass('text-green-500').addClass('text-red-500');
+                        $('#formMessage').text('Please fix the errors').removeClass(
+                            'text-green-500').addClass('text-red-500');
                     }
                 });
             });

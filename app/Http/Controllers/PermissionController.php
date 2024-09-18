@@ -26,10 +26,13 @@ class PermissionController extends Controller
     // CREATE (View create form)
     public function create()
     {
-        return view('permissions.create');
+        try {
+            return view('permissions.create');
+        } catch (Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to load create form: ' . $e->getMessage()]);
+        }
     }
 
-    // STORE (Add a new permission) - ATOMIC
     public function store(Request $request)
     {
         // Validation
@@ -39,7 +42,7 @@ class PermissionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         // ATOMICITY: Mulai transaksi
@@ -54,14 +57,13 @@ class PermissionController extends Controller
 
             // Commit transaction (Durability)
             DB::commit();
-            return response()->json(['success' => 'Permission created successfully!'], 200);
+            return redirect()->route('permissions.index')->with('success', 'Permission added successfully!');
         } catch (Exception $e) {
             // Rollback jika terjadi error (Consistency)
             DB::rollBack();
-            return response()->json(['error' => 'Failed to create permission: ' . $e->getMessage()], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to create permission: ' . $e->getMessage()]);
         }
     }
-
 
     // EDIT (View edit form)
     public function edit($id)
@@ -108,7 +110,6 @@ class PermissionController extends Controller
         }
     }
 
-    // DELETE (Delete a permission) - ATOMIC
     public function destroy($id)
     {
         // ATOMICITY: Mulai transaksi
@@ -120,11 +121,13 @@ class PermissionController extends Controller
 
             // Commit transaction (Durability)
             DB::commit();
-            return redirect()->route('permissions.index')->with('success', 'Permission deleted successfully!');
+
+            // Return JSON response
+            return response()->json(['success' => true, 'message' => 'Permission deleted successfully!']);
         } catch (Exception $e) {
             // Rollback jika terjadi error (Consistency)
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to delete permission: ' . $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete permission: ' . $e->getMessage()]);
         }
     }
 }

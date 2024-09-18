@@ -2,28 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
 
 class UserController extends Controller
 {
     // Menampilkan daftar pengguna
     public function index()
     {
-        $users = DB::table('users')
-            ->orderBy('created_at', 'DESC')
-            ->paginate(10);
-
-        // Mengambil roles untuk setiap user
-        foreach ($users as $user) {
-            $user->roles = DB::table('role_user')
-                ->join('roles', 'role_user.role_id', '=', 'roles.id')
-                ->where('role_user.user_id', $user->id)
-                ->pluck('roles.name');
-        }
+        $users = User::with('roles')->orderBy('created_at', 'DESC')->paginate(10);
 
         return view('user.index', ['users' => $users]);
     }
@@ -31,11 +22,11 @@ class UserController extends Controller
     // Menampilkan form untuk membuat pengguna baru
     public function create()
     {
-        $roles = DB::table('roles')->get(); // Mengambil semua role
+        $roles = Role::all(); // Mengambil semua role
         return view('user.create', ['roles' => $roles]);
     }
 
-    // Menyimpan pengguna baru dengan Query Builder dan AJAX
+    // Menyimpan pengguna baru dengan Eloquent
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -45,27 +36,26 @@ class UserController extends Controller
             'role' => 'required|exists:roles,id',
         ]);
 
-        // Menggunakan Query Builder untuk menyimpan data
-        DB::table('users')->insert([
+        // Menyimpan pengguna
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
-            'role_id' => $validated['role'],
-            'created_at' => now(),
-            'updated_at' => now(),
+            'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect()->back()->with('success', 'User created successfully.');
+        // Menyimpan role untuk pengguna
+        $user->roles()->attach($validated['role']);
+
+        return response()->json(['message' => 'User created successfully.']);
     }
+
 
     // Menampilkan form untuk mengedit pengguna
     public function edit($id)
     {
-        $user = DB::table('users')->where('id', $id)->first();
-        $roles = DB::table('roles')->get();
-        $userRoles = DB::table('role_user')
-            ->where('user_id', $id)
-            ->pluck('role_id');
+        $user = User::findOrFail($id);
+        $roles = Role::all();
+        $userRoles = $user->roles->pluck('id')->toArray();
 
         return view('user.edit', [
             'user' => $user,
@@ -74,14 +64,14 @@ class UserController extends Controller
         ]);
     }
 
-    // Memperbarui pengguna yang sudah ada dengan Query Builder dan AJAX
+    // Memperbarui pengguna yang sudah ada dengan Eloquent
     public function update($id, Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|min:3',
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|min:6|confirmed',
-            'roles' => 'required|array',
+            'role' => 'required|array',
         ]);
 
         if ($validator->fails()) {
@@ -89,38 +79,25 @@ class UserController extends Controller
         }
 
         // Memperbarui pengguna
-        $updateData = [
+        $user = User::findOrFail($id);
+        $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            'updated_at' => now(),
-        ];
-
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
-        }
-
-        DB::table('users')->where('id', $id)->update($updateData);
+            'password' => $request->filled('password') ? Hash::make($request->password) : $user->password,
+        ]);
 
         // Menghapus role lama dan menyimpan role baru
-        DB::table('role_user')->where('user_id', $id)->delete();
-        foreach ($request->roles as $roleId) {
-            DB::table('role_user')->insert([
-                'user_id' => $id,
-                'role_id' => $roleId,
-            ]);
-        }
+        $user->roles()->sync($request->role);
 
         return redirect()->back()->with('success', 'User updated successfully.');
     }
 
-    // Menghapus pengguna dengan Query Builder dan AJAX
+    // Menghapus pengguna dengan Eloquent
     public function destroy($id)
     {
-        // Menghapus role yang terkait dengan pengguna
-        DB::table('role_user')->where('user_id', $id)->delete();
-
-        // Menghapus pengguna
-        DB::table('users')->where('id', $id)->delete();
+        $user = User::findOrFail($id);
+        $user->roles()->detach(); // Menghapus role yang terkait dengan pengguna
+        $user->delete(); // Menghapus pengguna
 
         return redirect()->back()->with('success', 'User deleted successfully.');
     }

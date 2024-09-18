@@ -60,17 +60,26 @@
             $('#permissionsTable').on('submit', '.delete-form', function(e) {
                 e.preventDefault();
                 var form = $(this);
+                var row = form.closest('tr');
+
                 $.ajax({
                     url: form.attr('action'),
                     type: 'POST',
                     data: form.serialize(),
                     success: function(response) {
                         if (response.success) {
-                            form.closest('tr').remove(); // Remove row from table
+                            // Hapus baris dari tabel jika berhasil
+                            row.remove();
+                            alert(response.message);
+                        } else {
                         }
+                    },
+                    error: function(xhr) {
+                        alert('Failed to delete permission.');
                     }
                 });
             });
         });
     </script>
+
 </x-app-layout>

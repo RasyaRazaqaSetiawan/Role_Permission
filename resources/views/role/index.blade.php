@@ -23,7 +23,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($roles as $data)
+                        @forelse ($role as $data)
                         <tr class="border-b" id="permissionRow{{  $loop->index + 1 }}">
                                 <td class="px-6 py-3">{{ $loop->index + 1 }}</td>
                                 <td class="px-6 py-3">{{ $data->name }}</td>
@@ -48,7 +48,7 @@
             </div>
 
             <div class="my-3">
-                {{ $roles->links('pagination::tailwind') }}
+                {{ $role->links('pagination::tailwind') }}
             </div>
         </div>
     </div>

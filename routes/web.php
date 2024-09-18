@@ -7,7 +7,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'role:Admin']], function () {
+Route::group(['prefix' => 'setting', 'middleware' => ['auth', 'role:Admin']], function () {
     Route::group(['prefix' => 'users', 'middleware' => 'auth'], function () {
         Route::resource('user', UserController::class);
     });

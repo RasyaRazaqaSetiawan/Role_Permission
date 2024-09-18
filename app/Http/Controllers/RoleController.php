@@ -11,14 +11,14 @@ use Exception;
 
 class RoleController extends Controller
 {
-    // List all roles (Read)
+    // List all role (Read)
     public function index()
     {
-        $roles = Role::with('permissions')->paginate(10);
+        $role = Role::with('permissions')->paginate(10);
         $permissions = Permission::all();
         $hakAkses = DB::table('hakakses')->get(); // Mengambil hak akses
 
-        return view('role.index', compact('roles', 'permissions', 'hakAkses'));
+        return view('role.index', compact('role', 'permissions', 'hakAkses'));
     }
 
 
@@ -30,30 +30,31 @@ class RoleController extends Controller
         return view('role.create', compact('permissions', 'hakAkses'));
     }
 
-  // Store a new role in the database (Create - Step 2)
-public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|unique:roles,name',
-        'permissions' => 'required|array',
-        'permissions.*' => 'exists:permissions,id',
-    ]);
+    // Store a new role in the database (Create - Step 2)
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|unique:roles,name', // Mengubah 'role' menjadi 'roles'
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,id',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $role = Role::create(['name' => $request->name]);
+            $role->syncPermissions($request->permissions);
+            DB::commit();
+            return response()->json(['message' => 'Role created successfully!'], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to create role: ' . $e->getMessage()], 500);
+        }
     }
 
-    DB::beginTransaction();
-    try {
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
-        DB::commit();
-        return response()->json(['message' => 'Role created successfully!'], 200);
-    } catch (Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => 'Failed to create role: ' . $e->getMessage()], 500);
-    }
-}
 
 
     // Show form to edit a role (Update - Step 1)
@@ -61,14 +62,13 @@ public function store(Request $request)
     {
         $role = Role::findOrFail($id);
         $permissions = Permission::all();
+        $hakAkses = DB::table('hakakses')->get(); // Mengambil hak akses
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 
-        return response()->json([
-            'role' => $role,
-            'permissions' => $rolePermissions,
-            'all_permissions' => $permissions
-        ]);
+        return view('role.edit', compact('role', 'permissions', 'hakAkses', 'rolePermissions'));
     }
+
+
 
     // Update the role in the database (Update - Step 2)
     public function update(Request $request, $id)
@@ -80,7 +80,7 @@ public function store(Request $request)
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         // ATOMICITY: Mulai transaksi
@@ -95,11 +95,11 @@ public function store(Request $request)
 
             // Commit transaction
             DB::commit();
-            return response()->json(['message' => 'Role updated successfully!'], 200);
+            return redirect()->route('role.index')->with('success', 'Role updated successfully!');
         } catch (Exception $e) {
             // Rollback jika terjadi error
             DB::rollBack();
-            return response()->json(['error' => 'Failed to update role: ' . $e->getMessage()], 500);
+            return redirect()->back()->with('error', 'Failed to update role: ' . $e->getMessage())->withInput();
         }
     }
 
